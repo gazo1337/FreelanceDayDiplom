@@ -1,23 +1,17 @@
 from django.http import HttpResponse, JsonResponse
 from rest_framework.response import Response
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from rest_framework_simplejwt.tokens import RefreshToken
-from apps.administration.serializers import UserSerializer
 from rest_framework.permissions import IsAuthenticated
-from collections import namedtuple
-import psycopg2
-
-conn = psycopg2.connect(dbname='adm', user='postgres', 
-                        password='postgres', host='localhost')
-cursor = conn.cursor()
+from .models import User, Employer, Executor
+from .serializers import UserSerializer, EmployerSerializer, ExecutorSerializer
 
 @swagger_auto_schema(
     method='get',
@@ -53,7 +47,6 @@ def refresh_token(request):
             status=status.HTTP_401_UNAUTHORIZED
         )
 
-
 @swagger_auto_schema(
     method='get',
     manual_parameters=[
@@ -71,13 +64,12 @@ def debug_token(request):
         decoded = AccessToken(token)
         return Response({
             'user_id': decoded['user_id'],
-            'login': decoded['login'],
+            'login': decoded['username'],
             'role': decoded['role'],
             'is_valid': True
         })
     except Exception as e:
         return Response({'error': str(e)}, status=401)
-
 
 @swagger_auto_schema(
     method='get',
@@ -98,28 +90,18 @@ def debug_token(request):
 )
 @api_view(['GET'])
 def login(request):
-    userLogin = request.query_params.get('login')
-    userPass = request.query_params.get('password') 
-    cursor.execute(
-        "SELECT * FROM user_login WHERE login = %s AND password = %s",
-        [userLogin, userPass]
-    )
-    record = cursor.fetchone()
-    if record is None:
+    login = request.query_params.get('login')
+    password = request.query_params.get('password')
+    
+    user = User.objects.filter(login=login).first()
+    
+    if user is None or not user.check_password(password):
         return Response("Неверный логин или пароль", status=status.HTTP_404_NOT_FOUND)
-    User = namedtuple('User', ['id', 'login', 'password', 'role', 'date'])
-    user = User(
-        id=record[2], 
-        login=record[0],
-        password=record[1],
-        role=record[3],
-        date=record[4]
-    )
     
     payload = {
-        'user_id': record[2],
-        'login': record[0],
-        'role': record[3],
+        'user_id': user.id,
+        'login': user.login,
+        'role': user.role,
     }
 
     refresh = RefreshToken()
@@ -129,7 +111,7 @@ def login(request):
 
     user_data = {
         'id': user.id,
-        'login': user.login,
+        'login': user.username,
         'role': user.role,
         'date': user.date
     }
@@ -139,7 +121,6 @@ def login(request):
         'refresh': str(refresh),
         'user': user_data
     })
-
 
 @swagger_auto_schema(
     method='post',
@@ -162,91 +143,40 @@ def logout(request):
     except Exception as e:
         return Response({'error': str(e)}, status=400)
 
-
 @swagger_auto_schema(
     method='post',
-    request_body=UserSerializer.UserSerializer,
+    request_body=UserSerializer,
     responses={201: "Успех"}
 )
 @api_view(['POST'])
 def register(request):
-    serializer = UserSerializer.UserSerializer(data=request.data)
+    serializer = UserSerializer(data=request.data)
     if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    val = serializer.validated_data
-    cursor.execute(
-        """
-        select *
-        from user_login
-        where login = %s
-        """,
-        (val['login'],)
-    )
-    result = cursor.fetchone()
-    if result is not None:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    if User.objects.filter(login=serializer.validated_data['login']).exists():
         return JsonResponse(
-            {"error": f"Пользователь с данным логином уже существует!"},
+            {"error": "Пользователь с данным логином уже существует!"},
             status=401
         )
-    cursor.execute(
-        """
-        select user_id
-        from user_login
-        order by user_id desc limit 1
-        """
-    )
-    result = cursor.fetchone()
-    last_id = int(result[0]) + 1 if result else 1
     
-    cursor.execute(
-        """
-        insert into user_login
-        values(%s, %s, %s, %s, %s)
-        """,
-        [
-            val['login'],
-            val['password'],
-            last_id,
-            val['role'],
-            val['date']
-        ]
-    )
-    conn.commit()
-    if val['role'] == 'executor':
-        cursor.execute(
-            """
-            insert into executor
-            values(%s, %s, %s, %s, %s, %s, %s, %s)
-            """,
-            [
-                last_id,
-                val['name'],
-                val.get('description', ''),
-                0,
-                0,
-                0,
-                0,
-                val['date']
-            ]
-        )
-        conn.commit()
-    else:
-        cursor.execute(
-            """
-            insert into employer
-            values(%s, %s, %s, %s, %s)
-            """,
-            [
-                last_id,
-                val['name'],
-                val['organization'],
-                val.get('description', ''),
-                val['date']
-            ]
-        )
-        conn.commit()
-    return JsonResponse({"id": last_id}, status=status.HTTP_201_CREATED)
+    user = serializer.save()
 
+    if user.role == 'executor':
+        Executor.objects.create(
+            user=user,
+            name=serializer.validated_data.get('username', ''),
+            description=serializer.validated_data.get('description', '')
+        )
+    else:
+        Employer.objects.create(
+            user=user,
+            name=serializer.validated_data.get('username', ''),
+            organization=serializer.validated_data.get('organization', ''),
+            description=serializer.validated_data.get('description', '')
+        )
+    
+    return JsonResponse({"id": user.id}, status=status.HTTP_201_CREATED)
 
 @swagger_auto_schema(
     method='get',
@@ -267,33 +197,17 @@ def register(request):
 @permission_classes([IsAuthenticated])
 @api_view(['GET'])
 def getUserById(request):
-    userId = request.query_params.get('id')
-    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
-    token = auth_header.split(' ')[0]
-    try:
-        decoded = AccessToken(token)
-        user_id = decoded['user_id']
-        user_role = decoded['role']
-    except (InvalidToken, TokenError) as e:
-        return JsonResponse(
-            {"error": f"Invalid token: {str(e)}"},
-            status=401
-        )
-    cursor.execute(
-        "SELECT * FROM user_login WHERE user_id = %s",
-        [userId]
-    )
-    record = cursor.fetchone()
-    if record is None:
-        return Response("Неверный идентификатор пользователя", status=status.HTTP_404_NOT_FOUND)
-    userData = [{
-        "id": record[2],
-        "login": record[0],
-        "role": record[3],
-        "date": record[4]
-    }]
-    return Response(userData)
-
+    user_id = request.query_params.get('id')
+    user = get_object_or_404(User, id=user_id)
+    
+    user_data = {
+        "id": user.id,
+        "login": user.username,
+        "role": user.role,
+        "date": user.date
+    }
+    
+    return Response([user_data])
 
 @swagger_auto_schema(
     method='get',
@@ -314,42 +228,17 @@ def getUserById(request):
 @permission_classes([IsAuthenticated])
 @api_view(['GET'])
 def getEmployer(request):
-    userId = request.query_params.get('id')
-    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
-    token = auth_header.split(' ')[0]
-    try:
-        decoded = AccessToken(token)
-        user_id = decoded['user_id']
-        user_role = decoded['role']
-    except (InvalidToken, TokenError) as e:
-        return JsonResponse(
-            {"error": f"Invalid token: {str(e)}"},
-            status=401
-        )
-    cursor.execute(
-        "SELECT ul.login, " \
-        "ul.create_dttm, " \
-        "e.name, " \
-        "e.organization, " \
-        "e.description " \
-        "FROM user_login ul " \
-        "JOIN employer e " \
-        "ON ul.user_id = e.user_id " \
-        "WHERE ul.user_id = %s",
-        [userId]
-    )
-    record = cursor.fetchone()
-    if record is None:
-        return Response("Неверный идентификатор пользователя", status=status.HTTP_404_NOT_FOUND)
-    userData = [{
-        "login": record[0],
-        "date": record[1],
-        "name": record[2],
-        "oranization": record[3],
-        "description": record[4]
-    }]
-    return Response(userData)
-
+    user_id = request.query_params.get('id')
+    employer = get_object_or_404(Employer, user_id=user_id)
+    serializer = EmployerSerializer(employer)
+    
+    response_data = {
+        "login": employer.user.username,
+        "date": employer.user.date,
+        **serializer.data
+    }
+    
+    return Response([response_data])
 
 @swagger_auto_schema(
     method='get',
@@ -370,40 +259,14 @@ def getEmployer(request):
 @permission_classes([IsAuthenticated])
 @api_view(['GET'])
 def getExecutor(request):
-    userId = request.query_params.get('id')
-    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
-    token = auth_header.split(' ')[0]
-    try:
-        decoded = AccessToken(token)
-        user_id = decoded['user_id']
-        user_role = decoded['role']
-    except (InvalidToken, TokenError) as e:
-        return JsonResponse(
-            {"error": f"Invalid token: {str(e)}"},
-            status=401
-        )
-    cursor.execute(
-        "SELECT ul.login, " \
-        "ul.create_dttm, " \
-        "e.name, " \
-        "e.description, " \
-        "e.level, " \
-        "e.loality " \
-        "FROM user_login ul " \
-        "JOIN executor e " \
-        "ON ul.user_id = e.user_id " \
-        "WHERE ul.user_id = %s",
-        (userId,)
-    )
-    record = cursor.fetchone()
-    if record is None:
-        return Response("Неверный идентификатор пользователя", status=status.HTTP_404_NOT_FOUND)
-    userData = [{
-        "login": record[0],
-        "date": record[1],
-        "name": record[2],
-        "description": record[3],
-        "level": record[4],
-        "loyality": record[5],
-    }]
-    return Response(userData)
+    user_id = request.query_params.get('id')
+    executor = get_object_or_404(Executor, user_id=user_id)
+    serializer = ExecutorSerializer(executor)
+    
+    response_data = {
+        "login": executor.user.username,
+        "date": executor.user.date,
+        **serializer.data
+    }
+    
+    return Response([response_data])

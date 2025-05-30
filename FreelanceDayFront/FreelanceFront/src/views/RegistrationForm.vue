@@ -182,7 +182,7 @@ export default {
           login: this.form.login,
           password: this.form.password,
           role: this.form.role,
-          name: this.form.name,
+          username: this.form.name,
           description: this.form.description,
           date: this.form.date
         };

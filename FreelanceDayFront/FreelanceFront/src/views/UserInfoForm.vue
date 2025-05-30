@@ -184,7 +184,7 @@ export default {
           if (detailResponse.data && detailResponse.data.length > 0) {
             const detailData = detailResponse.data[0];
             this.userData.name = detailData.name || '';
-            this.userData.oranization = detailData.oranization || '';
+            this.userData.oranization = detailData.organization || '';
             this.userData.description = detailData.description || '';
             if (userBasicInfo.role === 'executor') {
               this.userData.level = detailData.level !== undefined ? detailData.level : null;
