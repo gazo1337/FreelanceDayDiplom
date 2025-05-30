@@ -1,16 +1,22 @@
 \section{Рабочий проект}
 \subsection{Классы, используемые при разработке сайта}
 
-Можно выделить следующий список классов и их методов, использованных при разработке web-приложения (таблица \ref{class:table}). Пример таблицы с уменьшенным межстрочным интервалом.
+Можно выделить следующий список модулей веб-сервиса: administration, adminPayment и task.
+
+\subsubsection{Модуль administration}
+
+Модуль administration реализует функционал работы с пользователями: хранение данных, получение данных, установка и проверка роли и авторизация. Методы вызываются по url "<administration/">.
+
+Спецификация методов модуля приведена в таблице \ref{admin:table}.
 
 \renewcommand{\arraystretch}{0.8} % уменьшение расстояний до сетки таблицы
 \begin{xltabular}{\textwidth}{|X|p{2.5cm}|>{\setlength{\baselineskip}{0.7\baselineskip}}p{4.85cm}|>{\setlength{\baselineskip}{0.7\baselineskip}}p{4.85cm}|}
-\caption{Описание классов Bitrix, используемых в приложении\label{class:table}}\\
-\hline \centrow \setlength{\baselineskip}{0.7\baselineskip} Название класса & \centrow \setlength{\baselineskip}{0.7\baselineskip} Модуль, к которому относится класс & \centrow Описание класса & \centrow Методы \\
-\hline \centrow 1 & \centrow 2 & \centrow 3 & \centrow 4\\ \hline
+\caption{Описание классов Bitrix, используемых в приложении\label{admin:table}}\\
+\hline \centrow \setlength{\baselineskip}{0.7\baselineskip} Имя метода (функции) & \centrow \setlength{\baselineskip}{0.7\baselineskip} Модуль, к которому относится класс & \centrow Описание класса\\
+\hline \centrow 1 & \centrow 2 & \centrow 3\\ \hline
 \endfirsthead
-\caption*{Продолжение таблицы \ref{class:table}}\\
-\hline \centrow 1 & \centrow 2 & \centrow 3 & \centrow 4\\ \hline
+\caption*{Продолжение таблицы \ref{admin:table}}\\
+\hline \centrow 1 & \centrow 2 & \centrow 3\\ \hline
 \finishhead
 CMain & Главный модуль & CMain – главный класс страницы web-приложения. После одного из этапов по загрузке страницы в сценарии становится доступным инициализированный системой объект данного класса с именем \$APPLICATION & void ShowTitle(string property\_code = «title», bool strip\_tags = true)
 Выводит заголовок страницы
