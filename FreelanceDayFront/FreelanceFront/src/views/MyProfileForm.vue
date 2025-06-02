@@ -104,6 +104,7 @@
 <script>
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import config from '../config/api.js';
 
 export default {
   name: 'MyProfilePage',
@@ -151,8 +152,8 @@ export default {
       try {
         const token = localStorage.getItem('accessToken');
         const endpoint = this.userRole === 'employer' 
-          ? 'http://127.0.0.1:8000/administration/getEmployer/' 
-          : 'http://127.0.0.1:8000/administration/getExecutor/';
+          ? `${config.endpoints.admin}getEmployer/` 
+          : `${config.endpoints.admin}getExecutor/`;
         
         const response = await axios.get(endpoint, {
           params: { id: this.userId },

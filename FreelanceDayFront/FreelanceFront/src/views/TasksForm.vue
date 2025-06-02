@@ -89,6 +89,7 @@
 <script>
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import config from '../config/api.js';
 
 export default {
   name: 'TasksPage',
@@ -166,7 +167,7 @@ export default {
     async fetchTasks() {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get('http://127.0.0.1:8000/task/getTasks/', {
+        const response = await axios.get(`${config.endpoints.tasks}getTasks/`, {
           headers: {
             'Authorization': `${token}`
           }
@@ -186,7 +187,7 @@ export default {
         }
 
         const token = localStorage.getItem('accessToken');
-        await axios.post(`http://127.0.0.1:8000/task/vote/?taskId=${taskId}&create=${this.date}`, {}, {
+        await axios.post(`${config.endpoints.tasks}vote/?taskId=${taskId}&create=${this.date}`, {}, {
           headers: {
             'Authorization': `${token}`
           }

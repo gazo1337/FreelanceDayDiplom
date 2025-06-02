@@ -109,6 +109,7 @@
 <script>
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import config from '../config/api.js';
 
 export default {
   name: 'MyPaymentsPage',
@@ -152,7 +153,7 @@ export default {
       try {
         const token = localStorage.getItem('accessToken');
         const response = await axios.get(
-          `http://127.0.0.1:8000/adminPayment/getBalance/?id=${this.userId}&role=${this.userRole}`,
+          `${config.endpoints.payments}getBalance/?id=${this.userId}&role=${this.userRole}`,
           { headers: { 'Authorization': token } }
         );
         this.balance = parseFloat(response.data.balance);
@@ -169,7 +170,7 @@ export default {
       try {
         const token = localStorage.getItem('accessToken');
         const response = await axios.get(
-          'http://127.0.0.1:8000/adminPayment/payment/getOperations/',
+          `${config.endpoints.payments}payment/getOperations/`,
           {
             params: {
               id: this.userId,

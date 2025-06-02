@@ -96,6 +96,7 @@
 <script>
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import config from '../config/api.js';
 
 export default {
   name: 'MyTasksPage',
@@ -152,7 +153,7 @@ export default {
           : 'getEmpTask';
         
         const response = await axios.get(
-          `http://127.0.0.1:8000/task/${endpoint}/`, 
+          `${config.endpoints.tasks}${endpoint}/`, 
           {
             headers: { 'Authorization': token }
           }

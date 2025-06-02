@@ -145,6 +145,7 @@
 <script>
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import config from '../config/api.js';
 
 export default {
   name: 'WithdrawPage',
@@ -246,7 +247,7 @@ export default {
       try {
         const token = localStorage.getItem('accessToken');
         const response = await axios.get(
-          'http://127.0.0.1:8000/adminPayment/getBalance/',
+          `${config.endpoints.payments}getBalance/`,
           {
             params: {
               id: this.userId,
@@ -295,7 +296,7 @@ export default {
         const currentDate = new Date().toISOString().split('T')[0];
         await new Promise(resolve => setTimeout(resolve, 3000));
         await axios.post(
-          'http://127.0.0.1:8000/adminPayment/payment/fromExecutor/',
+          `${config.endpoints.payments}payment/fromExecutor/`,
           null,
           {
             params: {

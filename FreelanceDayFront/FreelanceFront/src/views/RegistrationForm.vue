@@ -142,6 +142,7 @@
 
 <script>
 import axios from 'axios'; 
+import config from '../config/api.js';
 
 export default {
   name: 'RegisterPage',
@@ -189,7 +190,7 @@ export default {
         if (this.form.role === 'employer') {
           requestData.organization = this.form.organization || 'Индивидуальный предприниматель';
         }
-        const response = await axios.post(`http://127.0.0.1:8000//administration/register/`, requestData);
+        const response = await axios.post(`${config.endpoints.admin}register/`, requestData);
         this.successMessage = 'Регистрация прошла успешно!';
         setTimeout(() => {
           this.$router.push('/login');
@@ -237,7 +238,7 @@ export default {
         };
 
         const response = await axios.post(
-          'http://127.0.0.1:8000/adminPayment/createCard/',
+          `${config.endpoints.payments}createCard/`,
           cardData
         );
 

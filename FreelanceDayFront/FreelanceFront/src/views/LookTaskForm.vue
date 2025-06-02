@@ -156,6 +156,7 @@
 <script>
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import config from '../config/api.js';
 
 export default {
   name: 'TaskDetailPage',
@@ -254,7 +255,7 @@ export default {
       try {
         const token = localStorage.getItem('accessToken');
         const response = await axios.get(
-          `http://127.0.0.1:8000/administration/getExecutor/?id=${executorId}`,
+          `${config.endpoints.admin}getExecutor/?id=${executorId}`,
           { headers: { 'Authorization': token } }
         );
         
@@ -274,7 +275,7 @@ export default {
       try {
         const token = localStorage.getItem('accessToken');
         const response = await axios.get(
-          `http://127.0.0.1:8000/task/ifVote/?taskId=${this.$route.params.id}`,
+          `${config.endpoints.tasks}ifVote/?taskId=${this.$route.params.id}`,
           { headers: { 'Authorization': token } }
         );
         if (response.data?.status === 'error') {
@@ -298,7 +299,7 @@ export default {
         try {
           const token = localStorage.getItem('accessToken');
           const response = await axios.get(
-            `http://127.0.0.1:8000/administration/getEmployer/?id=${this.employerId}`,
+            `${config.endpoints.admin}getEmployer/?id=${this.employerId}`,
             { headers: { 'Authorization': token } }
           );
           if (response.data?.length > 0) {
@@ -334,7 +335,7 @@ export default {
       this.loading = true;
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get(`http://127.0.0.1:8000/task/task/?taskId=${this.$route.params.id}`, {
+        const response = await axios.get(`${config.endpoints.tasks}task/?taskId=${this.$route.params.id}`, {
           headers: {
             'Authorization': token
           }
@@ -356,7 +357,7 @@ export default {
     async checkResponse() {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get(`http://127.0.0.1:8000/task/checkResponse/?taskId=${this.$route.params.id}`, {
+        const response = await axios.get(`${config.endpoints.tasks}checkResponse/?taskId=${this.$route.params.id}`, {
           headers: {
             'Authorization': token
           }
@@ -370,7 +371,7 @@ export default {
       this.responding = true;
       try {
         const token = localStorage.getItem('accessToken');
-        await axios.post(`http://127.0.0.1:8000/task/vote/?taskId=${this.$route.params.id}&create=${this.date}`, {}, {
+        await axios.post(`${config.endpoints.tasks}vote/?taskId=${this.$route.params.id}&create=${this.date}`, {}, {
           headers: {
             'Authorization': token
           }
@@ -387,7 +388,7 @@ export default {
     async closeTask() {
       try {
         const token = localStorage.getItem('accessToken');
-        await axios.post(`http://127.0.0.1:8000/task/${this.$route.params.id}/close/`, {}, {
+        await axios.post(`${config.endpoints.tasks}${this.$route.params.id}/close/`, {}, {
           headers: {
             'Authorization': token
           }
@@ -412,7 +413,7 @@ export default {
         const currentDate = new Date().toISOString().split('T')[0]; 
         
         const response = await axios.put(
-          'http://127.0.0.1:8000/task/pushTask/',
+          `${config.endpoints.tasks}pushTask/`,
           null,
           {
             params: {
@@ -451,7 +452,7 @@ export default {
         const token = localStorage.getItem('accessToken');
         const currentDate = new Date().toISOString().split('T')[0];
         await axios.put(
-          'http://127.0.0.1:8000/task/pushTask/',
+          `${config.endpoints.tasks}pushTask/`,
           null,
           {
             params: {
@@ -465,7 +466,7 @@ export default {
           }
         );
         await axios.post(
-          'http://127.0.0.1:8000/adminPayment/payment/toExecutor/',
+          `${config.endpoints.payments}payment/toExecutor/`,
           null,
           {
             params: {

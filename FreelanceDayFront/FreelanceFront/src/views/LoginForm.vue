@@ -51,7 +51,7 @@
 
 <script>
 import axios from 'axios';
-// import api from '../config/api';
+import config from '../config/api.js';
 
 export default {
   data() {
@@ -71,7 +71,7 @@ export default {
         });
 
         const response = await axios.get(
-          `http://127.0.0.1:8000/administration/login/?${params.toString()}`,
+          `${config.endpoints.admin}login/?${params.toString()}`,
           {
             headers: {
               'Accept': 'application/json',

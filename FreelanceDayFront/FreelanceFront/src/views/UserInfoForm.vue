@@ -108,6 +108,7 @@
 <script>
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import config from '../config/api.js';
 
 export default {
   name: 'UserInfoPage',
@@ -160,7 +161,7 @@ export default {
       try {
         const token = localStorage.getItem('accessToken');
         const userResponse = await axios.get(
-          'http://127.0.0.1:8000/administration/getUserById/',
+          `${config.endpoints.admin}getUserById/`,
           {
             params: { id: this.userId },
             headers: { 'Authorization': token }
@@ -173,8 +174,8 @@ export default {
           this.userData.role = userBasicInfo.role;
           this.userData.date = userBasicInfo.date;
           const endpoint = userBasicInfo.role === 'employer' 
-            ? 'http://127.0.0.1:8000/administration/getEmployer/' 
-            : 'http://127.0.0.1:8000/administration/getExecutor/';
+            ? `${config.endpoints.admin}getEmployer/` 
+            : `${config.endpoints.admin}getExecutor/`;
           
           const detailResponse = await axios.get(endpoint, {
             params: { id: this.userId },

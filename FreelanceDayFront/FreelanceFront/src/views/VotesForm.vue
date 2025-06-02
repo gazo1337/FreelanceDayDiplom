@@ -106,6 +106,7 @@
 <script>
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import config from '../config/api.js';
 
 export default {
   name: 'TaskResponsesPage',
@@ -145,7 +146,7 @@ export default {
     async setExecutor(executorId) {
       const token = localStorage.getItem('accessToken');
       const response = await axios.put(
-        'http://127.0.0.1:8000/task/setExecutor/',
+        `${config.endpoints.tasks}setExecutor/`,
         null,
         {
           params: {
@@ -164,7 +165,7 @@ export default {
       const token = localStorage.getItem('accessToken');
       const currentDate = new Date().toISOString().split('T')[0];
       const response = await axios.put(
-        'http://127.0.0.1:8000/task/pushTask/',
+        `${config.endpoints.tasks}pushTask/`,
         null,
         {
           params: {
@@ -200,7 +201,7 @@ export default {
       try {
         const token = localStorage.getItem('accessToken');
         const response = await axios.get(
-          `http://127.0.0.1:8000/task/task/?taskId=${this.$route.params.id}`,
+          `${config.endpoints.tasks}task/?taskId=${this.$route.params.id}`,
           { headers: { 'Authorization': token } }
         );
         
@@ -220,7 +221,7 @@ export default {
         try {
         const token = localStorage.getItem('accessToken');
         const votesResponse = await axios.get(
-            `http://127.0.0.1:8000/task/getVotes/?taskId=${this.$route.params.id}`,
+            `${config.endpoints.tasks}getVotes/?taskId=${this.$route.params.id}`,
             { headers: { 'Authorization': token } }
         );
         
@@ -229,7 +230,7 @@ export default {
         for (const id of executorIds) {
             try {
             const response = await axios.get(
-                `http://127.0.0.1:8000/administration/getExecutor/?id=${id}`,
+                `${config.endpoints.admin}getExecutor/?id=${id}`,
                 { headers: { 'Authorization': token } }
             );
             

@@ -157,6 +157,7 @@
 <script>
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import config from '../config/api.js';
 
 export default {
   name: 'DepositPage',
@@ -296,7 +297,7 @@ export default {
         await new Promise(resolve => setTimeout(resolve, 3000));
         
         await axios.post(
-          'http://127.0.0.1:8000/adminPayment/payment/toEmployer/',
+          `${config.endpoints.payments}payment/toEmployer/`,
           null,
           {
             params: {

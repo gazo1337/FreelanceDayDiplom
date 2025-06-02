@@ -134,6 +134,7 @@
 <script>
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import config from '../config/api.js';
 
 export default {
   name: 'CreateTaskPage',
@@ -193,7 +194,7 @@ export default {
       try {
         const token = localStorage.getItem('accessToken');
         const response = await axios.get(
-          `http://127.0.0.1:8000/adminPayment/getBalance/?id=${this.userId}&role=${this.userRole}`,
+          `${config.endpoints.payments}getBalance/?id=${this.userId}&role=${this.userRole}`,
           { headers: { 'Authorization': token } }
         );
         this.balance = parseFloat(response.data.balance);
@@ -221,7 +222,7 @@ export default {
         };
 
         const taskResponse = await axios.post(
-          'http://127.0.0.1:8000/task/createTask/',
+          `${config.endpoints.tasks}createTask/`,
           taskData,  
           { headers: { 'Authorization': token } }
         );
@@ -229,7 +230,7 @@ export default {
         const taskId = taskResponse.data.id;
 
         await axios.post(
-          'http://127.0.0.1:8000/adminPayment/payment/toTask/',
+          `${config.endpoints.payments}payment/toTask/`,
           null,
           {
             params: {
