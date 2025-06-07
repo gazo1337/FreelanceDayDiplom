@@ -43,7 +43,7 @@
           <div class="form-group">
             <label for="name">Название задачи*</label>
             <input 
-              v-model="form.name" 
+              v-model="form.task_name" 
               type="text" 
               id="name" 
               required
@@ -55,7 +55,7 @@
           <div class="form-group">
             <label for="description">Описание задачи*</label>
             <textarea 
-              v-model="form.description" 
+              v-model="form.task_desc" 
               id="description" 
               rows="5"
               required
@@ -141,8 +141,8 @@ export default {
   data() {
     return {
       form: {
-        name: '',
-        description: '',
+        task_name: '',
+        task_desc: '',
         cost: 1000,
         complexity: 2,
         create_dttm: new Date().toISOString().split('T')[0]
@@ -157,8 +157,8 @@ export default {
   },
   computed: {
     formValid() {
-      return this.form.name && 
-             this.form.description && 
+      return this.form.task_name && 
+             this.form.task_desc && 
              this.form.cost > 0 && 
              this.form.complexity !== '';
     }
@@ -218,13 +218,12 @@ export default {
 
         const taskData = {
           ...this.form,
-          initiator: this.userId 
         };
 
         const taskResponse = await axios.post(
           `${config.endpoints.tasks}createTask/`,
           taskData,  
-          { headers: { 'Authorization': token } }
+          { headers: { 'Authorization': `Bearer ${token}` } }
         );
         
         const taskId = taskResponse.data.id;

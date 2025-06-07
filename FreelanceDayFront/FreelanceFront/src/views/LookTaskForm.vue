@@ -83,10 +83,10 @@
             {{ employerName || 'Загрузка...' }}
             </router-link>
           </div>
-          <div v-if="task.executor_id" class="meta-item">
+          <div v-if="task.taskstatus__executor_id" class="meta-item">
             <span class="meta-label">Исполнитель:</span>
             <router-link 
-            :to="`/userInfo/${task.executor_id}`" 
+            :to="`/userInfo/${task.taskstatus__executor_id}`" 
             class="user-link"
             >
             {{ executorName || 'Загрузка...' }}
@@ -100,7 +100,7 @@
         </div>
         
         <template v-if="userRole === 'executor'">
-      <div v-if="userRole === 'executor' && task.task_status === 'CREATED'" class="task-actions">
+      <div v-if="userRole === 'executor' && task.taskstatus__task_status === 'CREATED'" class="task-actions">
     <button 
       v-if="!hasResponded && !responseLoading"
       @click="respondToTask"
@@ -122,7 +122,7 @@
   </div>
 
       <button 
-        v-else-if="task.task_status === 'IN_PROGRESS' && isCurrentExecutor"
+        v-else-if="task.taskstatus__task_status === 'IN_PROGRESS' && isCurrentExecutor"
         @click="sendForCompletion"
         class="action-button complete-button"
         :disabled="completionLoading"
@@ -132,15 +132,14 @@
     </template>
     <template v-else-if="userRole === 'employer'">
       <button 
-        v-if="task.task_status === 'CREATED'"
+        v-if="task.taskstatus__task_status === 'CREATED'"
         @click="viewResponses"
         class="action-button view-button"
       >
         Просмотр откликов
       </button>
-
       <button 
-        v-else-if="task.task_status === 'ON_END' && isTaskOwner"
+        v-else-if="task.taskstatus__task_status === 'ON_END' && isTaskOwner"
         @click="completeTask"
         class="action-button finish-button"
         :disabled="completionLoading"
@@ -186,16 +185,16 @@ export default {
   },
   computed: {
     statusText() {
-      return this.statusMap[this.task.task_status]?.text || this.task.task_status
+      return this.statusMap[this.task.task_status]?.text || this.task.taskstatus__task_status
     },
     statusClass() {
       return this.statusMap[this.task.task_status]?.class || ''
     },
     statusClass() {
       return {
-        'status-open': this.task.task_status === 'open',
-        'status-in_progress': this.task.task_status === 'in_progress',
-        'status-closed': this.task.task_status === 'closed'
+        'status-open': this.task.taskstatus__task_status === 'open',
+        'status-in_progress': this.taskstatus__task_status === 'in_progress',
+        'status-closed': this.task.taskstatus__task_status === 'closed'
       };
     },
     complexityText() {
@@ -209,8 +208,8 @@ export default {
       return levels[this.task.complexity] || 'Не указана';
     },
     formattedDate() {
-      if (!this.task.create_dttm) return '';
-      const date = new Date(this.task.create_dttm);
+      if (!this.task.taskstatus__create_dttm) return '';
+      const date = new Date(this.task.taskstatus__create_dttm);
       return date.toLocaleDateString('ru-RU', {
         day: 'numeric',
         month: 'long',
@@ -221,10 +220,10 @@ export default {
       return this.employerId !== null || this.loading;
     },
     isCurrentExecutor() {
-      return this.task.executor_id === this.userId;
+      return this.task.taskstatus__executor_id === this.userId;
     },
     isTaskOwner() {
-      return this.task.task_initiator === this.userId;
+      return this.task.task_initiator_id === this.userId;
     },
     userId() {
       const token = localStorage.getItem('accessToken');
@@ -232,7 +231,7 @@ export default {
     }
   },
   watch: {
-    'task.executor_id': {
+    'task.taskstatus__executor_id': {
       immediate: true,
       handler(newVal) {
         if (newVal) {
@@ -245,8 +244,8 @@ export default {
     await this.verifyToken();
     await this.fetchTask();
     await this.checkIfVoted();
-    if (this.task.task_initiator) {
-      await this.loadEmployerData(this.task.task_initiator);
+    if (this.task.task_initiator_id) {
+      await this.loadEmployerData(this.task.task_initiator_id);
     }
   },
   methods: {
@@ -276,13 +275,9 @@ export default {
         const token = localStorage.getItem('accessToken');
         const response = await axios.get(
           `${config.endpoints.tasks}ifVote/?taskId=${this.$route.params.id}`,
-          { headers: { 'Authorization': token } }
+          { headers: { 'Authorization': `Bearer ${token}` } }
         );
-        if (response.data?.status === 'error') {
-          this.hasResponded = true;
-        } else {
-          this.hasResponded = false;
-        }
+        this.hasResponded = response.data.has_vote;
       } catch (error) {
         console.error('Ошибка проверки отклика:', error);
         this.hasResponded = true;
@@ -291,7 +286,7 @@ export default {
       }
     },
     async loadEmployerData() {
-      this.employerId = this.task?.task_initiator
+      this.employerId = this.task?.task_initiator_id
                       || this.task?.employer_id 
                       || this.task?.creator_id 
                       || null;
@@ -337,16 +332,13 @@ export default {
         const token = localStorage.getItem('accessToken');
         const response = await axios.get(`${config.endpoints.tasks}task/?taskId=${this.$route.params.id}`, {
           headers: {
-            'Authorization': token
+            'Authorization': `Bearer ${token}`
           }
         });
         
-        if (response.data.results.length > 0) {
-          this.task = response.data.results[0];
+
+          this.task = response.data.results;
           await this.checkResponse();
-        } else {
-          this.error = 'Задача не найдена';
-        }
       } catch (error) {
         console.error('Ошибка загрузки задачи:', error);
         this.error = 'Не удалось загрузить данные задачи';
@@ -359,7 +351,7 @@ export default {
         const token = localStorage.getItem('accessToken');
         const response = await axios.get(`${config.endpoints.tasks}checkResponse/?taskId=${this.$route.params.id}`, {
           headers: {
-            'Authorization': token
+            'Authorization': `Bearer ${token}`
           }
         });
         this.responded = response.data.hasResponded;
@@ -373,7 +365,7 @@ export default {
         const token = localStorage.getItem('accessToken');
         await axios.post(`${config.endpoints.tasks}vote/?taskId=${this.$route.params.id}&create=${this.date}`, {}, {
           headers: {
-            'Authorization': token
+            'Authorization': `Bearer ${token}`
           }
         });
         this.responded = true;
@@ -390,7 +382,7 @@ export default {
         const token = localStorage.getItem('accessToken');
         await axios.post(`${config.endpoints.tasks}${this.$route.params.id}/close/`, {}, {
           headers: {
-            'Authorization': token
+            'Authorization': `Bearer ${token}`
           }
         });
         this.task.task_status = 'closed';
@@ -422,7 +414,7 @@ export default {
               modifyDt: currentDate
             },
             headers: { 
-              'Authorization': token 
+              'Authorization': `Bearer ${token}` 
             }
           }
         );
@@ -461,7 +453,7 @@ export default {
               modifyDt: currentDate
             },
             headers: { 
-              'Authorization': token 
+              'Authorization': `Bearer ${token}` 
             }
           }
         );
@@ -470,7 +462,7 @@ export default {
           null,
           {
             params: {
-              ExecutorID: this.task.executor_id,
+              ExecutorID: this.task.taskstatus__executor_id,
               TaskID: this.task.task_id,
               count: this.task.cost, 
               date: currentDate

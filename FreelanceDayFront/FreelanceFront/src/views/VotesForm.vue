@@ -154,7 +154,7 @@ export default {
             userId: executorId
           },
           headers: { 
-            'Authorization': token 
+            'Authorization': `Bearer ${token}` 
           }
         }
       );
@@ -174,7 +174,7 @@ export default {
             modifyDt: currentDate
           },
           headers: { 
-            'Authorization': token 
+            'Authorization': `Bearer ${token}` 
           }
         }
       );
@@ -202,7 +202,7 @@ export default {
         const token = localStorage.getItem('accessToken');
         const response = await axios.get(
           `${config.endpoints.tasks}task/?taskId=${this.$route.params.id}`,
-          { headers: { 'Authorization': token } }
+          { headers: { 'Authorization': `Bearer ${token}` } }
         );
         
         if (response.data.results.length > 0) {
@@ -222,7 +222,7 @@ export default {
         const token = localStorage.getItem('accessToken');
         const votesResponse = await axios.get(
             `${config.endpoints.tasks}getVotes/?taskId=${this.$route.params.id}`,
-            { headers: { 'Authorization': token } }
+            { headers: { 'Authorization': `Bearer ${token}` } }
         );
         
         const executorIds = votesResponse.data.results.map(r => r.executor_id);

@@ -169,7 +169,7 @@ export default {
         const token = localStorage.getItem('accessToken');
         const response = await axios.get(`${config.endpoints.tasks}getTasks/`, {
           headers: {
-            'Authorization': `${token}`
+            'Authorization': `Bearer ${token}`
           }
         });
         this.tasks = response.data.results;
@@ -189,7 +189,7 @@ export default {
         const token = localStorage.getItem('accessToken');
         await axios.post(`${config.endpoints.tasks}vote/?taskId=${taskId}&create=${this.date}`, {}, {
           headers: {
-            'Authorization': `${token}`
+            'Authorization': `Bearer ${token}`
           }
         });
         if (taskIndex !== -1) {

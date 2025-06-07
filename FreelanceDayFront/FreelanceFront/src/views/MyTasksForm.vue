@@ -155,7 +155,7 @@ export default {
         const response = await axios.get(
           `${config.endpoints.tasks}${endpoint}/`, 
           {
-            headers: { 'Authorization': token }
+            headers: { 'Authorization': `Bearer ` + token }
           }
         );
         
