@@ -86,7 +86,7 @@
             >
               <div class="transaction-info">
                 <span class="transaction-amount">
-                  {{ Math.abs(transaction.payment_count) }} ₽
+                  {{ Math.abs(transaction.count) }} ₽
                   <span class="transaction-type">
                     {{ getTransactionType(transaction) }}
                   </span>
@@ -207,7 +207,7 @@ export default {
     getTransactionDescription(transaction) {
       if (transaction.reciever_id == this.userId) {
         return this.userRole === 'employer' 
-          ? 'Возврат средств' 
+          ? 'Пополнение счёта' 
           : `Оплата за задачу #${transaction.task_id}`;
       } else {
         return this.userRole === 'employer'

@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'apps.administration',
     'apps.task',
+    'apps.adminPayment',
     'django.contrib.admin',
     'rest_framework',
     'rest_framework_simplejwt',
@@ -136,7 +137,7 @@ DATABASES = {
         'PORT': '5432',
         'PASSWORD': 'postgres'
     },
-    'adminPayment': {
+    'ap': {
         'ENGINE': 'django.db.backends.postgresql',
         'HOST': 'localhost',
         'NAME': 'ap',
@@ -190,4 +191,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'administration.User'
 
-DATABASE_ROUTERS = ['apps.task.routers.TaskRouter']
+DATABASE_ROUTERS = ['apps.task.routers.TaskRouter', 'apps.adminPayment.routers.AdminPaymentRouter']
